@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/azhar-k/walleto-core:sha-4cccdbe
+    container_name: walleto-core-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_FLYWAY_ENABLED=false
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/walleto_db
+      - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-ChangeMeInProduction123}
+      - JWT_SECRET=${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - walleto-network
+
+  usermanagement:
+    image: ghcr.io/azhar-k/usermanagement:latest
+    container_name: walleto-usermanagement
+    restart: always
+    ports:
+      - "8073:8073"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_APPLICATION_JSON={"spring":{"datasource":{"url":"jdbc:postgresql://postgres:5432/usermanagement","username":"${POSTGRES_USER:-postgres}","password":"${POSTGRES_PASSWORD:-ChangeMeInProduction123}"}}}
+      - JWT_SECRET=${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - walleto-network
+
+  api-gateway:
+    image: nginx:alpine
+    container_name: walleto-api-gateway
+    restart: always
+    ports:
+      - "8071:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+      - usermanagement
+    networks:
+      - walleto-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: walleto-postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=walleto_db
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ChangeMeInProduction123}
+    ports:
+      - "5432:5432" # Optional: only if you need to access DB from outside the VM, remove otherwise
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d walleto_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - walleto-network
+
+volumes:
+  postgres_data:
+    name: walleto_db_volume
+
+networks:
+  walleto-network:
+    name: walleto_network
