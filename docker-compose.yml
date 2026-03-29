@@ -71,6 +71,20 @@ services:
     networks:
       - walleto-network
 
+  ui:
+    image: ghcr.io/azhar-k/walleto-ui:latest
+    container_name: walleto-ui
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - CORE_API_URL=${CORE_API_URL}
+      - USER_API_URL=${USER_API_URL}
+    depends_on:
+      - api-gateway
+    networks:
+      - walleto-network
+
 volumes:
   postgres_data:
     name: walleto_db_volume
