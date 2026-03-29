@@ -5,4 +5,4 @@
 5. `source set-env.sh`
 6. `docker login ghcr.io -u azhar-k`
 7. Ensure port `80` (for UI), `8071` (for API Gateway), `8080`, `8073`, and `5432` are open depending on your needs.
-8. `sudo docker-compose up -d`
+8. `sudo docker compose up -d`
