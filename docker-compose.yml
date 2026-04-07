@@ -31,6 +31,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_APPLICATION_JSON={"spring":{"datasource":{"url":"jdbc:postgresql://postgres:5432/usermanagement","username":"${POSTGRES_USER:-postgres}","password":"${POSTGRES_PASSWORD:-ChangeMeInProduction123}"}}}
       - JWT_SECRET=${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-60}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-60}
       - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m
     depends_on:
       postgres:
